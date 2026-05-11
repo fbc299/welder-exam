@@ -11,6 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check environment
+        run: |
+          echo "=== Pre-installed tools ==="
+          ls /opt/hostedtoolcache/ 2>/dev/null || echo "No hostedtoolcache"
+          ls /usr/local/ 2>/dev/null
+          which java && java -version 2>&1
+          which gradle && gradle --version 2>&1 || echo "gradle not in PATH"
+          ls /opt/gradle* 2>/dev/null || echo "no gradle in /opt"
+          echo "=== HOME ==="
+          echo $HOME
+          ls $HOME 2>/dev/null
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -34,17 +46,17 @@ jobs:
       - name: Create local.properties
         run: echo "sdk.dir=$HOME/android-sdk" > app/local.properties
 
-      - name: Download and setup Gradle
-        run: |
-          curl -sL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /opt
-          export PATH=/opt/gradle-8.4/bin:$PATH
-          gradle --version
-
       - name: Build debug APK
         run: |
-          export PATH=/opt/gradle-8.4/bin:$PATH
-          gradle assembleDebug --no-daemon 2>&1
+          if command -v /opt/gradle-8.4/bin/gradle 2>/dev/null; then
+            /opt/gradle-8.4/bin/gradle assembleDebug --no-daemon 2>&1
+          elif command -v gradle 2>/dev/null; then
+            gradle assembleDebug --no-daemon 2>&1
+          else
+            echo "ERROR: Gradle not found"
+            ls /opt/ 2>/dev/null
+            exit 1
+          fi
 
       - name: Upload APK
         if: success()
