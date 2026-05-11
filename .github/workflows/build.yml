@@ -33,29 +33,27 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
 
-      - name: Download Gradle wrapper JAR
+      - name: Download Gradle wrapper
         run: |
           mkdir -p gradle/wrapper
           curl -sL https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-          ls -la gradle/wrapper/
-          file gradle/wrapper/gradle-wrapper.jar
-
-      - name: Install Gradle wrapper scripts
-        run: |
-          # Download real gradlew script from official Gradle repo
           curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew -o gradlew
           chmod +x gradlew
-          cat gradlew | head -5
-
-      - name: Verify wrapper
-        run: |
-          ls -la gradlew gradle/wrapper/gradle-wrapper.jar
+          echo "Wrapper files:"
+          ls -la gradle/wrapper/ gradlew
           file gradle/wrapper/gradle-wrapper.jar
 
       - name: Build with Gradle
+        id: build
         run: |
           echo "sdk.dir=$HOME/android-sdk" > app/local.properties
-          ./gradlew assembleDebug --no-daemon 2>&1 | tail -80
+          echo "=== Running assembleDebug ==="
+          ./gradlew assembleDebug --no-daemon 2>&1
+          BUILD_EXIT=$?
+          echo "=== Build exit code: $BUILD_EXIT ==="
+          echo "=== APK files ==="
+          find . -name "*.apk" -type f 2>/dev/null
+          exit $BUILD_EXIT
 
       - name: Upload APK
         if: success()
@@ -63,3 +61,13 @@ jobs:
         with:
           name: welder-exam-debug
           path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-failure-log
+          path: |
+            app/build/outputs/**/*.log
+            build/reports/**/*.html
+          retention-days: 3
