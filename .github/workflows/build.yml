@@ -34,33 +34,31 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
           echo "SDK setup complete"
 
-      - name: Download real Gradle wrapper
+      - name: Download and extract Gradle 8.4
         run: |
-          mkdir -p gradle/wrapper
-          curl -sL https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew -o gradlew
-          chmod +x gradlew
-          ls -la gradle/wrapper/ gradlew
-          file gradle/wrapper/gradle-wrapper.jar
-
-      - name: Verify wrapper works
-        run: |
-          echo "=== Verify gradlew ==="
-          ./gradlew --version 2>&1
-          echo "=== Exit: $? ==="
+          echo "=== Downloading Gradle 8.4 ==="
+          curl -sL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle-8.4.zip
+          echo "Downloaded, size: $(stat -c%s /tmp/gradle-8.4.zip 2>/dev/null || ls -la /tmp/gradle-8.4.zip | awk '{print $5}') bytes"
+          unzip -q /tmp/gradle-8.4.zip -d /opt/
+          ls /opt/gradle-8.4/bin/
+          /opt/gradle-8.4/bin/gradle --version
 
       - name: Build with Gradle
         run: |
           echo "sdk.dir=$HOME/android-sdk" > app/local.properties
-          echo "=== Running assembleDebug ==="
-          ./gradlew assembleDebug --no-daemon 2>&1 | tee /tmp/build.log
+          echo "=== Contents of project ==="
+          ls -la
+          echo "=== app directory ==="
+          ls -la app/
+          echo "=== Running Gradle build ==="
+          /opt/gradle-8.4/bin/gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/build.log
           BUILD_EXIT=${PIPESTATUS[0]}
-          echo "=== Exit code: $BUILD_EXIT ==="
+          echo "=== Build exit code: $BUILD_EXIT ==="
           echo "=== APK search ==="
           find . -name "*.apk" -type f 2>/dev/null
-          ls -la app/build/outputs/apk/debug/ 2>/dev/null && echo "APK found!" || echo "No APK"
-          echo "=== Log tail ==="
-          tail -30 /tmp/build.log
+          ls -la app/build/outputs/apk/debug/ 2>/dev/null && echo "APK FOUND" || echo "No APK dir"
+          echo "=== Log tail (last 50 lines) ==="
+          tail -50 /tmp/build.log
 
       - name: Upload APK
         if: success()
