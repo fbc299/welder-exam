@@ -34,10 +34,29 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
           echo "SDK setup complete"
 
+      - name: Find system Gradle
+        id: find_gradle
+        run: |
+          GRADLE_PATH=$(find /opt -name "gradle" -type f 2>/dev/null | grep -v wrapper | head -1)
+          echo "Found gradle at: $GRADLE_PATH"
+          if [ -z "$GRADLE_PATH" ]; then
+            echo "No system gradle"
+            exit 1
+          fi
+          $GRADLE_PATH --version
+          echo "gradle_path=$GRADLE_PATH" >> $GITHUB_OUTPUT
+
+      - name: Generate Gradle wrapper
+        run: |
+          ${{ steps.find_gradle.outputs.gradle_path }} wrapper --gradle-version 8.4
+          chmod +x gradlew
+          ls -la gradlew gradle/wrapper/gradle-wrapper.jar
+          file gradle/wrapper/gradle-wrapper.jar
+
       - name: Build with Gradle
         run: |
           echo "sdk.dir=$HOME/android-sdk" > app/local.properties
-          ./gradlew assembleDebug --no-daemon 2>&1 | tail -60
+          ./gradlew assembleDebug --no-daemon 2>&1 | tail -80
 
       - name: Upload APK
         if: success()
