@@ -34,21 +34,17 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
           echo "SDK setup complete"
 
-      - name: Find system Gradle
-        id: find_gradle
+      - name: Verify Gradle and Java
         run: |
-          GRADLE_PATH=$(find /opt -name "gradle" -type f 2>/dev/null | grep -v wrapper | head -1)
-          echo "Found gradle at: $GRADLE_PATH"
-          if [ -z "$GRADLE_PATH" ]; then
-            echo "No system gradle"
-            exit 1
-          fi
-          $GRADLE_PATH --version
-          echo "gradle_path=$GRADLE_PATH" >> $GITHUB_OUTPUT
+          which java && java -version 2>&1 | head -1
+          which gradle && gradle --version 2>&1 | head -5
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "GRADLE_HOME=$GRADLE_HOME"
+          echo "PATH contains gradle: $(echo $PATH | tr ':' '\n' | grep -c gradle)"
 
       - name: Generate Gradle wrapper
         run: |
-          ${{ steps.find_gradle.outputs.gradle_path }} wrapper --gradle-version 8.4
+          gradle wrapper --gradle-version 8.4
           chmod +x gradlew
           ls -la gradlew gradle/wrapper/gradle-wrapper.jar
           file gradle/wrapper/gradle-wrapper.jar
