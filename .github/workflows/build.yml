@@ -33,51 +33,41 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
 
-      - name: Setup Gradle
+      - name: Find Gradle
+        id: find_gradle
         run: |
-          echo "PATH before: $(which gradle 2>/dev/null || echo 'not found')"
-          echo "$HOME/.local/bin/gradle"
-          ls -la "$HOME/.local/bin/" 2>/dev/null || echo "no .local/bin"
-          # Check if gradle is in path from setup-java cache
-          if command -v gradle; then
-            gradle --version
-          else
-            echo "Gradle not in PATH, checking alternatives..."
-            find "$HOME" -name "gradle" -type f 2>/dev/null | head -5
-          fi
+          echo "=== Checking for gradle in various locations ==="
+          # Check PATH
+          which gradle || echo "gradle not in PATH"
+          # Check common locations
+          find /opt /usr/local /home -name "gradle" -type f 2>/dev/null | head -10
+          # Check gradle cache in setup-java
+          ls ~/.gradle/ 2>/dev/null || echo "no .gradle dir"
+          find ~/.gradle -name "gradle" -type f 2>/dev/null | head -5
+          find ~/.gradle -name "gradle-*" -type d 2>/dev/null | head -5
+          echo "=== Done ==="
 
-      - name: Download Gradle wrapper
+      - name: Download Gradle 8.4 directly
         run: |
-          mkdir -p gradle/wrapper
-          curl -sL https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew -o gradlew
-          chmod +x gradlew
-          ls -la gradle/wrapper/ gradlew
-          file gradle/wrapper/gradle-wrapper.jar
+          echo "=== Downloading Gradle 8.4 ==="
+          curl -sL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle-8.4.zip
+          echo "Downloaded, size: $(ls -la /tmp/gradle-8.4.zip | awk '{print $5}') bytes"
+          unzip -q /tmp/gradle-8.4.zip -d /opt/
+          echo "Unzipped"
+          ls /opt/gradle-8.4/bin/
+          /opt/gradle-8.4/bin/gradle --version
 
       - name: Build with Gradle
         run: |
           echo "sdk.dir=$HOME/android-sdk" > app/local.properties
-          echo "=== Build start ==="
-          date
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/build.log
-          echo "=== Build end, exit: $? ==="
-          date
-          echo "=== APK files ==="
-          find . -name "*.apk" -type f
-          echo "=== APK size ==="
-          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "No APK dir"
-
-      - name: Save build log
-        if: always()
-        run: |
-          cat /tmp/build.log > build-log.txt
-          git config --global user.email "ci@github.com"
-          git config --global user.name "CI"
-          git checkout --orphan log-branch
-          git add build-log.txt
-          git commit -m "Build log $(date)"
-          git push origin log-branch:log-branch || true
+          echo "=== Building APK ==="
+          /opt/gradle-8.4/bin/gradle assembleDebug --no-daemon 2>&1
+          BUILD_EXIT=$?
+          echo "=== Build exit code: $BUILD_EXIT ==="
+          echo "=== Looking for APK ==="
+          find . -name "*.apk" -type f 2>/dev/null
+          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "APK dir not found"
+          echo "=== Build complete ==="
 
       - name: Upload APK
         if: success()
