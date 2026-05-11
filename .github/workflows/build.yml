@@ -32,14 +32,19 @@ jobs:
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
 
       - name: Create local.properties
-        run: |
-          echo "sdk.dir=$HOME/android-sdk" > app/local.properties
+        run: echo "sdk.dir=$HOME/android-sdk" > app/local.properties
 
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: 8.4
-          arguments: assembleDebug --no-daemon
+      - name: Download and setup Gradle
+        run: |
+          curl -sL https://services.gradle.org/distributions/gradle-8.4-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /opt
+          export PATH=/opt/gradle-8.4/bin:$PATH
+          gradle --version
+
+      - name: Build debug APK
+        run: |
+          export PATH=/opt/gradle-8.4/bin:$PATH
+          gradle assembleDebug --no-daemon 2>&1
 
       - name: Upload APK
         if: success()
