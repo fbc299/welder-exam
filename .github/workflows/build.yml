@@ -33,27 +33,51 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
 
+      - name: Setup Gradle
+        run: |
+          echo "PATH before: $(which gradle 2>/dev/null || echo 'not found')"
+          echo "$HOME/.local/bin/gradle"
+          ls -la "$HOME/.local/bin/" 2>/dev/null || echo "no .local/bin"
+          # Check if gradle is in path from setup-java cache
+          if command -v gradle; then
+            gradle --version
+          else
+            echo "Gradle not in PATH, checking alternatives..."
+            find "$HOME" -name "gradle" -type f 2>/dev/null | head -5
+          fi
+
       - name: Download Gradle wrapper
         run: |
           mkdir -p gradle/wrapper
           curl -sL https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
           curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew -o gradlew
           chmod +x gradlew
-          echo "Wrapper files:"
           ls -la gradle/wrapper/ gradlew
           file gradle/wrapper/gradle-wrapper.jar
 
       - name: Build with Gradle
-        id: build
         run: |
           echo "sdk.dir=$HOME/android-sdk" > app/local.properties
-          echo "=== Running assembleDebug ==="
-          ./gradlew assembleDebug --no-daemon 2>&1
-          BUILD_EXIT=$?
-          echo "=== Build exit code: $BUILD_EXIT ==="
+          echo "=== Build start ==="
+          date
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee /tmp/build.log
+          echo "=== Build end, exit: $? ==="
+          date
           echo "=== APK files ==="
-          find . -name "*.apk" -type f 2>/dev/null
-          exit $BUILD_EXIT
+          find . -name "*.apk" -type f
+          echo "=== APK size ==="
+          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "No APK dir"
+
+      - name: Save build log
+        if: always()
+        run: |
+          cat /tmp/build.log > build-log.txt
+          git config --global user.email "ci@github.com"
+          git config --global user.name "CI"
+          git checkout --orphan log-branch
+          git add build-log.txt
+          git commit -m "Build log $(date)"
+          git push origin log-branch:log-branch || true
 
       - name: Upload APK
         if: success()
@@ -61,13 +85,3 @@ jobs:
         with:
           name: welder-exam-debug
           path: app/build/outputs/apk/debug/app-debug.apk
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-failure-log
-          path: |
-            app/build/outputs/**/*.log
-            build/reports/**/*.html
-          retention-days: 3
