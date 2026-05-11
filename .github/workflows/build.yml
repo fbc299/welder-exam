@@ -3,6 +3,8 @@ name: Build APK
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.apk'
   workflow_dispatch:
 
 jobs:
@@ -41,13 +43,31 @@ jobs:
       - name: Build with Gradle
         run: |
           echo "sdk.dir=$HOME/android-sdk" > app/local.properties
-          gradle assembleDebug --no-daemon 2>&1 | tee /tmp/build.log
-          echo "Exit: $?"
-          find . -name "*.apk" -type f
+          gradle assembleDebug --no-daemon 2>&1
 
-      - name: Upload APK
+      - name: Upload APK to GitHub Release
         if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: welder-exam-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+        run: |
+          if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            echo "Found APK, size: $(ls -lh app/build/outputs/apk/debug/app-debug.apk | awk '{print $5}')"
+            # Use GitHub CLI to create a release with the APK
+            if command -v gh; then
+              gh release delete welder-exam -f --repo fbc299/welder-exam 2>/dev/null || true
+              gh release create welder-exam --repo fbc299/welder-exam \
+                --title "Welder Exam APK" \
+                --notes "Auto-built APK from commit $GITHUB_SHA" \
+                app/build/outputs/apk/debug/app-debug.apk
+            else
+              echo "gh not available, using git method"
+              git config --global user.email "ci@welder-exam.github.com"
+              git config --global user.name "CI Bot"
+              cp app/build/outputs/apk/debug/app-debug.apk welder-exam.apk
+              git add welder-exam.apk
+              git commit -m "APK build artifact $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+              git push origin main
+            fi
+          else
+            echo "ERROR: APK not found!"
+            find . -name "*.apk" 2>/dev/null
+            exit 1
+          fi
