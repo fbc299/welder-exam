@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -17,13 +17,27 @@ jobs:
           java-version: 17
           distribution: temurin
 
+      - name: Setup Android SDK
+        run: |
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$HOME/android-sdk" >> $GITHUB_ENV
+          if [ ! -d "$HOME/android-sdk" ]; then
+            curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdtools.zip
+            unzip -q /tmp/cmdtools.zip -d $HOME/android-sdk
+            mkdir -p $HOME/android-sdk/cmdline-tools/latest
+            mv $HOME/android-sdk/cmdline-tools/bin $HOME/android-sdk/cmdline-tools/latest/
+            mv $HOME/android-sdk/cmdline-tools/lib $HOME/android-sdk/cmdline-tools/latest/
+            yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1
+            $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools" > /dev/null 2>&1
+          fi
+
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v3
         with:
           gradle-version: 8.4
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon -Dorg.gradle.jvmargs="-Xmx2048m"
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
