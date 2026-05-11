@@ -1,37 +1,29 @@
-<!doctype html><html class="light" lang="zh-CN"><head><script type="module" crossorigin src="/assets/polyfills-DcjktSQX.js"></script><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><style>body,html{background:linear-gradient(110deg,#4a5568 .26%,#3a424f 97.78%)}html.body--biz{--biz-bg-fallback:#F2F3F4}html.body--biz.body--biz-dark{--biz-bg-fallback:#1A1E23}html.body--biz,html.body--biz body{background:var(--semi-color-bg-0,var(--biz-bg-fallback))}html.body--biz body[theme-mode=dark]{background:var(--semi-color-bg-0,#1a1e23)}.global-loading--biz{--biz-loading-fallback:#F2F3F4;background:var(--semi-color-bg-0,var(--biz-loading-fallback))}body[theme-mode=dark] .global-loading--biz{--biz-loading-fallback:#1A1E23;background:var(--semi-color-bg-0,var(--biz-loading-fallback))}.incompatible-box{display:flex;width:100%;height:100vh;flex-direction:column;align-items:center;justify-content:center;background-color:#fff}.incompatible-box h1{margin:0;font-size:32px;line-height:44px;font-weight:600;color:#202327;margin-bottom:20px}.incompatible-box .item1{margin-right:60px}.incompatible-box .logo{position:absolute;display:flex;bottom:40px;left:50%;transform:translateX(-50%)}.incompatible-box .logo div{font-size:20px;line-height:32px;font-weight:600;color:#202327;margin-left:8px}.incompatible-box p{margin:0;font-size:18px;line-height:24px;color:#4a5568;margin-bottom:60px}.incompatible-box span{display:inline-block;margin-top:14px}</style><title>飞牛 fnOS</title><script type="module" crossorigin src="/assets/index-D_xPdGMI.js"></script><link rel="modulepreload" crossorigin href="/assets/lottie-react-BygRc7Rv.js"><link rel="modulepreload" crossorigin href="/assets/rc-select-CO3KzX_O.js"><link rel="modulepreload" crossorigin href="/assets/lodash-BewUO5yP.js"><link rel="stylesheet" crossorigin href="/assets/index-4VgnMm8m.css"></head><body><script>(function () {
-      var isBiz = window.location.pathname.indexOf('/biz') === 0;
+#!/bin/sh
+#
+# Gradle wrapper script
+#
+# This script downloads the gradle wrapper JAR if it doesn't exist
+# and then executes Gradle.
 
-      if (!isBiz) return;
-      document.documentElement.classList.add('body--biz');
+DIR="$(cd "$(dirname "$0")" && pwd)"
+GRADLE_WRAPPER_JAR="$DIR/gradle/wrapper/gradle-wrapper.jar"
+GRADLE_PROPERTIES="$DIR/gradle/wrapper/gradle-wrapper.properties"
 
-      var applyBizTheme = function (themeMode) {
-        var theme = (themeMode || '').trim().toLowerCase();
-        var isDark = theme === 'dark';
+# Download wrapper JAR if missing
+if [ ! -f "$GRADLE_WRAPPER_JAR" ] || [ ! -s "$GRADLE_WRAPPER_JAR" ]; then
+    WRAPPER_URL="https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar"
+    mkdir -p "$DIR/gradle/wrapper"
+    if command -v wget >/dev/null 2>&1; then
+        wget -q "$WRAPPER_URL" -O "$GRADLE_WRAPPER_JAR" 2>/dev/null || curl -sL "$WRAPPER_URL" -o "$GRADLE_WRAPPER_JAR"
+    else
+        curl -sL "$WRAPPER_URL" -o "$GRADLE_WRAPPER_JAR"
+    fi
+fi
 
-        if (isDark) {
-          document.body.setAttribute('theme-mode', 'dark');
-        } else {
-          document.body.removeAttribute('theme-mode');
-        }
+# Use system gradle if wrapper JAR is missing or invalid
+if [ ! -f "$GRADLE_WRAPPER_JAR" ] || [ ! -s "$GRADLE_WRAPPER_JAR" ]; then
+    exec gradle "$@"
+fi
 
-        document.documentElement.classList.toggle('dark', isDark);
-        document.documentElement.classList.toggle('light', !isDark);
-        document.documentElement.classList.toggle('body--biz-dark', isDark);
-      };
-
-      var searchParams = new URLSearchParams(window.location.search);
-
-      var locale = (searchParams.get('locale') || '').trim().replace(/_/g, '-');
-      if (locale) {
-        document.documentElement.setAttribute('lang', locale);
-      }
-
-      applyBizTheme(searchParams.get('theme') || '');
-    })();</script><div id="root"></div><script>function isIE() {
-      var myNav = navigator.userAgent.toLowerCase();
-      return myNav.indexOf('msie') != -1 || myNav.indexOf('trident') != -1 ? true : false;
-    }
-    if (isIE()) {
-      document.querySelector('#root').innerHTML =
-        '<div class="incompatible-box"><h1>当前浏览器不兼容飞牛</h1><p>我们建议您使用以下浏览器的最新版获取更好的体验</p><div><img src="static/img/chrome.png" class="item1" alt="" width="auto" height="100" /><img src="static/img/edge.png" alt="" width="auto" height="100" /></div><div><span class="item1">Google Chrome</span><span>Microsoft Edge</span></div><div class="logo"><img src="static/img/trim-logo.png" width="32" height="32" /><div>飞牛</div></div></div>';
-    }</script></body></html>
+# Execute via wrapper JAR
+exec java -cp "$GRADLE_WRAPPER_JAR" org.gradle.wrapper.GradleWrapperMain "$@"
