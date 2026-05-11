@@ -1,0 +1,40 @@
+name: Generate Gradle Wrapper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find system Gradle
+        run: |
+          find /opt /usr/local -name "gradle" -type f 2>/dev/null
+          ls /opt/gradle*/bin/gradle 2>/dev/null || echo "No system gradle"
+
+      - name: Generate wrapper using system Gradle
+        run: |
+          GRADLE_PATH=$(find /opt -name "gradle" -type f 2>/dev/null | head -1)
+          echo "Using: $GRADLE_PATH"
+          if [ -n "$GRADLE_PATH" ]; then
+            $GRADLE_PATH wrapper --gradle-version 8.4
+          else
+            echo "No system gradle found"
+          fi
+
+      - name: Check generated files
+        run: |
+          ls -la gradlew gradle/wrapper/
+          file gradle/wrapper/gradle-wrapper.jar
+
+      - name: Upload wrapper files
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-wrapper-files
+          path: |
+            gradlew
+            gradle/wrapper/gradle-wrapper.jar
+            gradle/wrapper/gradle-wrapper.properties
