@@ -32,20 +32,23 @@ jobs:
           fi
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" "platform-tools" 2>&1 | tail -3
-          echo "SDK setup complete"
 
-      - name: Verify Gradle and Java
+      - name: Download Gradle wrapper JAR
         run: |
-          which java && java -version 2>&1 | head -1
-          which gradle && gradle --version 2>&1 | head -5
-          echo "JAVA_HOME=$JAVA_HOME"
-          echo "GRADLE_HOME=$GRADLE_HOME"
-          echo "PATH contains gradle: $(echo $PATH | tr ':' '\n' | grep -c gradle)"
+          mkdir -p gradle/wrapper
+          curl -sL https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+          ls -la gradle/wrapper/
+          file gradle/wrapper/gradle-wrapper.jar
 
-      - name: Generate Gradle wrapper
+      - name: Install Gradle wrapper scripts
         run: |
-          gradle wrapper --gradle-version 8.4
+          # Download real gradlew script from official Gradle repo
+          curl -sL https://raw.githubusercontent.com/gradle/gradle/v8.4.0/gradlew -o gradlew
           chmod +x gradlew
+          cat gradlew | head -5
+
+      - name: Verify wrapper
+        run: |
           ls -la gradlew gradle/wrapper/gradle-wrapper.jar
           file gradle/wrapper/gradle-wrapper.jar
 
