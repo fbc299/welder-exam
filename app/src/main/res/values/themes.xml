@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.WelderExam" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#00d4ff</item>
+        <item name="colorPrimaryVariant">#0099cc</item>
+        <item name="colorOnPrimary">#1a1a2e</item>
+        <item name="colorSecondary">#4ade80</item>
+        <item name="colorSecondaryVariant">#22c55e</item>
+        <item name="colorOnSecondary">#1a1a2e</item>
+        <item name="android:statusBarColor">#1a1a2e</item>
+        <item name="android:navigationBarColor">#1a1a2e</item>
+        <item name="android:windowBackground">#1a1a2e</item>
+    </style>
+</resources>

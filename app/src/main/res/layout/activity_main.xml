@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:gravity="center_horizontal"
+    android:background="#1a1a2e">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔧 焊工操作证"
+        android:textSize="28sp"
+        android:textColor="#00d4ff"
+        android:textStyle="bold"
+        android:layout_marginTop="40dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="自动答题助手"
+        android:textSize="24sp"
+        android:textColor="#ffffff"
+        android:layout_marginBottom="40dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="📖 题库数量: 747 道"
+        android:textSize="16sp"
+        android:textColor="#aaa"
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:id="@+id/tv_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="支持: 判断题 / 单选题 / 多选题"
+        android:textSize="14sp"
+        android:textColor="#888"
+        android:layout_marginBottom="30dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#333"
+        android:layout_marginBottom="30dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚠️ 需要悬浮窗权限"
+        android:textSize="14sp"
+        android:textColor="#ff6b6b"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⏹️ 服务未运行"
+        android:textSize="18sp"
+        android:textColor="#ffd93d"
+        android:layout_marginBottom="30dp"/>
+
+    <Button
+        android:id="@+id/btn_start_service"
+        android:layout_width="220dp"
+        android:layout_height="55dp"
+        android:text="▶ 启动悬浮窗"
+        android:textSize="18sp"
+        android:backgroundTint="#00d4ff"
+        android:textColor="#1a1a2e"
+        android:layout_marginBottom="15dp"/>
+
+    <Button
+        android:id="@+id/btn_stop_service"
+        android:layout_width="220dp"
+        android:layout_height="55dp"
+        android:text="⏹ 停止服务"
+        android:textSize="18sp"
+        android:backgroundTint="#ff6b6b"
+        android:textColor="#ffffff"
+        android:enabled="false"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="开启后悬浮窗会在检测到题目时自动显示答案"
+        android:textSize="12sp"
+        android:textColor="#666"
+        android:gravity="center"
+        android:layout_marginBottom="20dp"/>
+
+</LinearLayout>
