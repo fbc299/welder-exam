@@ -27,20 +27,13 @@ jobs:
           key: \${{ runner.os }}-gradle-\${{ hashFiles('**/*.gradle*') }}
 
       - name: Build debug APK
-        run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
-        continue-on-error: true
+        run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload build log (always)
-        uses: actions/upload-artifact@v4
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: build-log-\${{ github.run_number }}
-          path: build.log
-          retention-days: 2
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: welder-exam-debug-\${{ github.run_number }}
-          path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 5
+          files: app/build/outputs/apk/debug/app-debug.apk
+          name: Welder Exam APK v1.0
+          draft: true
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
