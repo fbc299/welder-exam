@@ -27,28 +27,11 @@ jobs:
           key: \${{ runner.os }}-gradle-\${{ hashFiles('**/*.gradle*') }}
 
       - name: Build debug APK
-        run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
-        continue-on-error: true
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-          retention-days: 1
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK
-        if: success()
-        env:
-          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if ! command -v gh >/dev/null 2>&1; then
-            echo "Installing gh CLI..."
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
-            chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
-            echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-            apt-get update -qq && apt-get install -y gh
-          fi
-          gh release create "welder-exam-v1.0" "app/build/outputs/apk/debug/app-debug.apk" --title "Welder Exam APK v1.0" --notes "Built from \${{ github.sha }}" --clobber
+        uses: actions/upload-artifact@v4
+        with:
+          name: welder-exam-debug-\${{ github.run_number }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 5
