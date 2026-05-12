@@ -35,5 +35,4 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime:2.7.0'
     implementation 'com.google.mlkit:text-recognition:16.0.0'
     implementation 'androidx.window:window:1.2.0'
-    implementation 'org.xerial:snappy-java:1.1.10.5'
 }
