@@ -44,5 +44,11 @@ jobs:
         env:
           GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "welder-exam-v1.0" "app/build/outputs/apk/debug/app-debug.apk" --title "Welder Exam APK v1.0" --notes "Built from \${{ github.sha }}" --clobber || true
-          echo "APK uploaded to GitHub Release"
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "Installing gh CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
+            chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
+            echo "deb [arch=\$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            apt-get update -qq && apt-get install -y gh
+          fi
+          gh release create "welder-exam-v1.0" "app/build/outputs/apk/debug/app-debug.apk" --title "Welder Exam APK v1.0" --notes "Built from \${{ github.sha }}" --clobber
