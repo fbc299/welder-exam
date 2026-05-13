@@ -22,11 +22,16 @@ jobs:
 
       - name: Build debug APK
         run: |
-          export ANDROID_HOME="$HOME/android-sdk"
-          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          echo "=== BUILD START ==="
+          echo "PWD: $(pwd)"
+          echo "HOME: $HOME"
+          ls -la /home/runner/android-sdk 2>/dev/null || echo "SDK not at /home/runner/android-sdk"
+          ls -la $HOME/android-sdk 2>/dev/null || echo "SDK not at $HOME/android-sdk"
+          ls -la /opt/android-sdk 2>/dev/null || echo "SDK not at /opt/android-sdk"
+          ANDROID_HOME="${HOME}/android-sdk"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           cat local.properties
-          ./gradlew assembleDebug --no-daemon --info 2>&1 | tail -50
+          ./gradlew assembleDebug --no-daemon --info 2>&1 | tail -80
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
