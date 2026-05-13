@@ -18,21 +18,14 @@ jobs:
           distribution: temurin
 
       - name: Set up Android SDK
-        id: setup-android
         uses: android-actions/setup-android@v3
 
-      - name: Show Android SDK path
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "SDK contents:"
-          ls -la "$ANDROID_HOME" 2>/dev/null || ls -la "$ANDROID_SDK_ROOT" 2>/dev/null || echo "SDK not found"
-
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
-        env:
-          ANDROID_HOME: ${{ steps.setup-android.outputs.sdk-path }}
-          ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.sdk-path }}
+        run: |
+          export ANDROID_HOME="$HOME/android-sdk"
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
