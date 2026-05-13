@@ -18,16 +18,21 @@ jobs:
           distribution: temurin
 
       - name: Set up Android SDK
+        id: setup-android
         uses: android-actions/setup-android@v3
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: ~/.gradle/caches
-          key: \${{ runner.os }}-gradle-\${{ hashFiles('**/*.gradle*') }}
+      - name: Show Android SDK path
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "SDK contents:"
+          ls -la "$ANDROID_HOME" 2>/dev/null || ls -la "$ANDROID_SDK_ROOT" 2>/dev/null || echo "SDK not found"
 
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon
+        env:
+          ANDROID_HOME: ${{ steps.setup-android.outputs.sdk-path }}
+          ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.sdk-path }}
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
