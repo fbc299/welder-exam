@@ -20,17 +20,44 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build debug APK
+      - name: Show environment
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la $HOME/android-sdk 2>/dev/null || echo "SDK not found at $HOME/android-sdk"
+          java -version 2>&1
+
+      - name: Configure Gradle
         run: |
           echo "sdk.dir=$HOME/android-sdk" > local.properties
-          ./gradlew assembleDebug --no-daemon 2>&1
+          cat local.properties
+          mkdir -p ~/.gradle
+          echo "org.gradle.daemon=false" >> ~/.gradle/gradle.properties
+          echo "org.gradle.parallel=false" >> ~/.gradle/gradle.properties
 
-      - name: Check APK output
+      - name: Build debug APK with retry
         run: |
-          echo "=== Looking for APK ==="
+          for i in 1 2 3; do
+            echo "=== Attempt $i/3 ==="
+            if ./gradlew assembleDebug --no-daemon --stacktrace 2>&1; then
+              echo "BUILD SUCCESS on attempt $i"
+              exit 0
+            fi
+            echo "BUILD FAILED, attempt $i/3"
+            if [ $i -lt 3 ]; then
+              echo "Waiting 30s before retry..."
+              sleep 30
+            fi
+          done
+          echo "ALL BUILD ATTEMPTS FAILED"
+          exit 1
+
+      - name: Check APK
+        run: |
+          echo "=== APK locations ==="
           find . -name "*.apk" -type f 2>/dev/null
-          ls -la app/build/outputs/apk/debug/ 2>/dev/null || echo "debug dir not found"
-          ls -la app/build/outputs/apk/ 2>/dev/null || echo "apk dir not found"
+          ls -la app/build/outputs/apk/debug/ 2>/dev/null && echo "APK FOUND!" || echo "APK NOT FOUND"
+          ls -la app/build/outputs/ 2>/dev/null || echo "No outputs dir"
 
       - name: Upload APK to Release
         uses: softprops/action-gh-release@v2
@@ -38,6 +65,5 @@ jobs:
           files: app/build/outputs/apk/debug/app-debug.apk
           name: Welder Exam APK v1.0
           draft: true
-          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
