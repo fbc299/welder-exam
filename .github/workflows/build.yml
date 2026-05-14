@@ -25,24 +25,9 @@ jobs:
           echo "sdk.dir=$HOME/android-sdk" > local.properties
           ./gradlew assembleDebug --no-daemon 2>&1 | tail -50
 
-      - name: Check APK
-        run: |
-          echo "=== APK ==="
-          ls -la app/build/outputs/apk/debug/app-debug.apk 2>/dev/null || echo "NOT FOUND"
-          find . -name "*.apk" -type f
-
-      - name: Upload APK as artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: welder-exam-debug
+          name: welder-exam-apk
           path: app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 5
-
-      - name: Create Release & Upload APK
-        uses: ncibone/gh-release@main
-        with:
-          artifact_name: welder-exam-debug
-          tag: v1.0
-          name: Welder Exam APK v1.0
-          draft: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          retention-days: 30
